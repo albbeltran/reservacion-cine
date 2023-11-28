@@ -9,42 +9,211 @@
 
 <body>
 
-    <p>Pantalla</p>
+    <p class="text" style="text-align: center;">Pantalla</p>
 
-    <button>1</button>
-    <button>2</button>
-    <button>3</button>
-    <button>4</button>
-    <button>5</button>
+    <div id="butacasDiv">
+    </div>
 
     <br><br>
 
     <form action="" id="form">
-        <label for="butaca">Selecciona tu butaca:</label>
-        <input type="text" name="butaca" id="butaca">
+        <label class="text" for="butaca">Selecciona tu butaca:</label>
+        <input type="text" name="butaca" id="butaca" required>
 
         <input type="submit" value="Seleccionar">
     </form>
 
+
+    <div id="pago">
+        <p class="text" id="contador"></p>
+        <button id="terminar">Terminar</button>
+        <button id="cancelar">Cancelar</button>
+    </div>
+
     <script>
+        let id;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch(`http://localhost:3500/butaca/`);
+            const butacas = await res.json();
+
+            console.log(butacas)
+
+            butacas.forEach(butaca => {
+                const boton = document.createElement("button");
+                boton.textContent = butaca.id;
+                boton.setAttribute('class', 'butaca')
+                butacasDiv.appendChild(boton)
+
+                if (butaca.estado === "on") {
+                    boton.style.backgroundColor = "red";
+                } else {
+                    boton.style.backgroundColor = "white";
+                }
+            })
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             id = butaca.value;
 
-            const res = await fetch(`http://localhost:3500/butaca/${id}`, {
+            const res = await fetch(`http://localhost:3500/butaca/${id}`);
+
+            if (res.status === 200) {
+                pago.style.display = 'block';
+
+                alert('Compra en proceso... Quedan 2 minutos');
+                cambiarEstado('on');
+                let tiempoRestante = 10;
+
+                const intervalo = setInterval(() => {
+                    contador.innerText = `${tiempoRestante} segundos`;
+
+                    if (tiempoRestante === 0) {
+                        clearInterval(intervalo);
+                        alert("El tiempo se ha agotado.");
+                        form.reset();
+                        pago.style.display = 'none';
+
+                        cambiarEstado('off');
+
+                    } else {
+                        console.log(`Tiempo restante: ${tiempoRestante} segundos`);
+                        tiempoRestante--;
+                    }
+                }, 1000);
+            }
+            else if (res.status === 400) alert('Butaca ocupada... selecciona otra');
+        })
+
+        terminar.addEventListener('click', async () => {
+            res = await cambiarEstado('on');
+
+            if (res.status === 200) {
+                alert('Reservación realizada');
+                location.reload();
+            }
+            else alert('Hubo un error');
+        })
+
+        cancelar.addEventListener('click', async () => {
+            res = await cambiarEstado('off');
+
+            if (res.status === 200) {
+                alert('Cancelación reservada');
+                pago.style.display = 'none';
+            }
+            else alert('Hubo un error');
+        })
+
+        async function cambiarEstado(estado) {
+            return await fetch(`http://localhost:3500/butaca/${id}`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ estado: 'on' })
+                body: JSON.stringify({ estado: estado })
             })
-
-            if(res.status === 200) alert('Compra en proceso... Quedan 2 minutos')
-            else if (res.status === 400) alert('Butaca ocupada... selecciona otra')
-        })
+        }
     </script>
 </body>
 
 </html>
+
+<style>
+    body {
+        background-image: url("https://wallpapercave.com/wp/wp6608538.jpg");
+        background-repeat: repeat;
+        background-size: cover;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .text {
+        font-size: 20px;
+        color: white;
+    }
+
+    #butacasDiv {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #butacasDiv button {
+        width: 50px;
+        height: 50px;
+        margin: 5px;
+        border: 1px solid black;
+    }
+
+    #butacasDiv button:hover {
+        background-color: #ddd;
+    }
+
+    #butacasDiv button.selected {
+        background-color: #000;
+        color: #fff;
+    }
+
+    #form {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    #form label {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    #form input[type="text"] {
+        width: 100px;
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    #form input[type="submit"] {
+        padding: 5px 10px;
+        border: 1px solid #000;
+        cursor: pointer;
+    }
+
+    #pago {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    #pago p {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    #pago button {
+        padding: 5px 10px;
+        border: 1px solid #000;
+        cursor: pointer;
+    }
+
+    #form input[type="submit"],
+    #pago button {
+        background-color: #323232;
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+    }
+
+    #terminar {
+        background-color: green !important;
+        margin-right: 10px;
+    }
+
+    #cancelar {
+        background-color: rgb(212, 53, 53) !important;
+    }
+
+    #pago {
+        display: none;
+    }
+</style>
