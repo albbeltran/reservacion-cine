@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cine</title>
+</head>
+
+<body>
+
+    <p>Pantalla</p>
+
+    <button>1</button>
+    <button>2</button>
+    <button>3</button>
+    <button>4</button>
+    <button>5</button>
+
+    <br><br>
+
+    <form action="" id="form">
+        <label for="butaca">Selecciona tu butaca:</label>
+        <input type="text" name="butaca" id="butaca">
+
+        <input type="submit" value="Seleccionar">
+    </form>
+
+    <script>
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            id = butaca.value;
+
+            const res = await fetch(`http://localhost:3500/butaca/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: 'on' })
+            })
+
+            if(res.status === 200) alert('Compra en proceso... Quedan 2 minutos')
+            else if (res.status === 400) alert('Butaca ocupada... selecciona otra')
+        })
+    </script>
+</body>
+
+</html>
